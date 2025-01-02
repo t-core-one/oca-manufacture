@@ -8,7 +8,7 @@ from odoo.tests import common
 class TestComponentOperation(common.SavepointCase):
     @classmethod
     def setUpClass(cls):
-        super(TestComponentOperation, cls).setUpClass()
+        super().setUpClass()
         cls.user_admin = cls.env.ref("base.user_admin")
         cls.env = api.Environment(cls.cr, cls.user_admin.id, {})
         cls.ProcurementGroup = cls.env["procurement.group"]

@@ -4,7 +4,6 @@ from odoo import _, models
 
 
 class MrpProduction(models.Model):
-
     _inherit = "mrp.production"
 
     def button_operate_components(self):

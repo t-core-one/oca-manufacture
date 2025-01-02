@@ -67,7 +67,7 @@ class MrpComponentOperation(models.Model):
     )
 
     sequence = fields.Integer(
-        string="Sequence",
-        help="Gives the sequence order when displaying the list of component operations",
+        help="Gives the sequence order when displaying the list "
+        "of component operations",
     )
     active = fields.Boolean(default=True)
