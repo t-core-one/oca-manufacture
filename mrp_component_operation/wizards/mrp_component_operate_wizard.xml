@@ -15,12 +15,12 @@
                         <field
                             name="lot_id"
                             string="Lot/Serial Number"
-                            attrs="{'required': [('tracking', '!=', 'none')]}"
+                            required="tracking != 'none'"
                             domain="[('product_id', '=', product_id), ('id', 'in', context.get('lot_ids', []))]"
                         />
                         <field
                             name="product_qty"
-                            attrs="{'readonly': ['|',('tracking', '=', 'serial'),('product_id', '=', False)]}"
+                            readonly="tracking == 'serial' or product_id == False"
                         />
                         <field name="operation_id" />
                         <field name="picking_type_id" invisible="1" />
@@ -29,7 +29,7 @@
                     <group
                         name="operations"
                         string="Operations"
-                        attrs="{'invisible': [('operation_id', '=', False)]}"
+                        invisible="operation_id == False"
                     >
                         <field name="outgoing_operation" />
                         <field name="incoming_operation" />

@@ -10,14 +10,14 @@ class MrpComponentOperation(models.Model):
 
     name = fields.Char(help="Component Operation Reference", required=True)
 
-    source_location_id = fields.Many2one(
+    manufacture_location_id = fields.Many2one(
         "stock.location",
-        "Source Location",
+        "Manufacture Location",
         help="The Location where the components are.",
     )
 
     source_route_id = fields.Many2one(
-        comodel_name="stock.location.route",
+        comodel_name="stock.route",
         string="Source Route",
         help="The Route used to pick the components.",
         domain=[("mo_component_selectable", "=", True)],
@@ -30,7 +30,7 @@ class MrpComponentOperation(models.Model):
     )
 
     destination_route_id = fields.Many2one(
-        comodel_name="stock.location.route",
+        comodel_name="stock.route",
         string="Destination Route",
         help="The Route used to transfer the components to the destination location.",
         domain=[("mo_component_selectable", "=", True)],

@@ -2,10 +2,10 @@
 # License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl).
 
 from odoo import api, fields
-from odoo.tests import common
+from odoo.tests.common import TransactionCase
 
 
-class TestComponentOperation(common.SavepointCase):
+class TestComponentOperation(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -14,7 +14,6 @@ class TestComponentOperation(common.SavepointCase):
         cls.ProcurementGroup = cls.env["procurement.group"]
         cls.MrpProduction = cls.env["mrp.production"]
         cls.env.user.company_id.manufacturing_lead = 0
-        cls.env.user.tz = False  # Make sure there's no timezone in user
 
         cls.picking_type = cls.env["stock.picking.type"].search(
             [
@@ -30,7 +29,6 @@ class TestComponentOperation(common.SavepointCase):
                     (6, 0, [cls.env.ref("mrp.route_warehouse0_manufacture").id])
                 ],
                 "type": "product",
-                "produce_delay": 0,
             }
         )
         cls.product2 = cls.env["product.product"].create(
@@ -43,6 +41,7 @@ class TestComponentOperation(common.SavepointCase):
             {
                 "product_id": cls.product1.id,
                 "product_tmpl_id": cls.product1.product_tmpl_id.id,
+                "produce_delay": 0,
                 "type": "normal",
                 "bom_line_ids": [
                     (0, 0, {"product_id": cls.product2.id, "product_qty": 2}),
@@ -56,7 +55,7 @@ class TestComponentOperation(common.SavepointCase):
         )
         cls.warehouse.manufacture_steps = "pbm"
         cls.ressuply_loc1 = cls.warehouse.lot_stock_id
-        cls.source_location = cls.env.ref("stock.stock_location_stock")
+        cls.manufacture_location = cls.warehouse.pbm_loc_id
         cls.destination_location = cls.env.ref("stock.stock_location_output")
         stock_location_locations_virtual = cls.env["stock.location"].create(
             {"name": "Virtual Locations", "usage": "view", "posz": 1}
@@ -69,7 +68,7 @@ class TestComponentOperation(common.SavepointCase):
                 "usage": "inventory",
             }
         )
-        cls.source_route = cls.env["stock.location.route"].create(
+        cls.source_route = cls.env["stock.route"].create(
             {
                 "name": "Source Route",
                 "mo_component_selectable": True,
@@ -77,7 +76,7 @@ class TestComponentOperation(common.SavepointCase):
             }
         )
 
-        cls.destination_route = cls.env["stock.location.route"].create(
+        cls.destination_route = cls.env["stock.route"].create(
             {
                 "name": "Destination Route",
                 "mo_component_selectable": True,
@@ -90,7 +89,7 @@ class TestComponentOperation(common.SavepointCase):
                 "name": "Transfer",
                 "route_id": cls.source_route.id,
                 "location_src_id": cls.ressuply_loc1.id,
-                "location_id": cls.source_location.id,
+                "location_dest_id": cls.manufacture_location.id,
                 "action": "pull",
                 "picking_type_id": cls.warehouse.int_type_id.id,
                 "procure_method": "make_to_stock",
@@ -102,8 +101,8 @@ class TestComponentOperation(common.SavepointCase):
             {
                 "name": "Transfer 2",
                 "route_id": cls.destination_route.id,
-                "location_src_id": cls.source_location.id,
-                "location_id": cls.destination_location.id,
+                "location_src_id": cls.manufacture_location.id,
+                "location_dest_id": cls.destination_location.id,
                 "action": "pull",
                 "picking_type_id": cls.warehouse.int_type_id.id,
                 "procure_method": "make_to_stock",
@@ -117,7 +116,7 @@ class TestComponentOperation(common.SavepointCase):
                 "name": "Operation Scrap and Replace",
                 "incoming_operation": "replace",
                 "outgoing_operation": "scrap",
-                "source_location_id": cls.source_location.id,
+                "manufacture_location_id": cls.manufacture_location.id,
                 "source_route_id": cls.source_route.id,
                 "scrap_location_id": cls.scrapped_location.id,
             }
@@ -128,7 +127,7 @@ class TestComponentOperation(common.SavepointCase):
                 "name": "Operation Scrap and Replace",
                 "incoming_operation": "no",
                 "outgoing_operation": "no",
-                "source_location_id": cls.source_location.id,
+                "manufacture_location_id": cls.manufacture_location.id,
             }
         )
 
@@ -137,7 +136,7 @@ class TestComponentOperation(common.SavepointCase):
                 "name": "Operation Move",
                 "incoming_operation": "replace",
                 "outgoing_operation": "move",
-                "source_location_id": cls.source_location.id,
+                "manufacture_location_id": cls.manufacture_location.id,
                 "source_route_id": cls.source_route.id,
                 "destination_location_id": cls.destination_location.id,
                 "destination_route_id": cls.destination_route.id,
@@ -149,9 +148,9 @@ class TestComponentOperation(common.SavepointCase):
         picking.action_assign()
         date = fields.Datetime.now()
         picking.action_confirm()
-        picking.move_lines.quantity_done = picking.move_lines.product_uom_qty
+        picking.move_ids.picked = True
         picking._action_done()
-        for move in picking.move_lines:
+        for move in picking.move_ids:
             move.date = date
 
     def test_01_scrap_and_replace(self):
@@ -159,7 +158,7 @@ class TestComponentOperation(common.SavepointCase):
         serials_p2 = []
         for i in range(nb_product_todo):
             serials_p2.append(
-                self.env["stock.production.lot"].create(
+                self.env["stock.lot"].create(
                     {
                         "name": f"lot_consumed_2_{i}",
                         "product_id": self.product3.id,
@@ -180,12 +179,13 @@ class TestComponentOperation(common.SavepointCase):
                 "product_qty": 2,
                 "product_uom_id": self.product1.uom_id.id,
                 "date_deadline": "2023-01-01 15:00:00",
-                "date_planned_start": "2023-01-01 15:00:00",
+                "date_start": "2023-01-01 15:00:00",
             }
         )
-        mo._onchange_move_raw()
-        mo._onchange_move_finished()
         mo.action_confirm()
+        picking = mo.move_raw_ids.move_orig_ids.picking_id
+        picking.move_ids.write({"picked": True})
+        picking.button_validate()
         mo.action_assign()
         move_product_2 = mo.move_raw_ids.filtered(
             lambda m: m.product_id == self.product2
@@ -193,7 +193,7 @@ class TestComponentOperation(common.SavepointCase):
         raw_move_product_3 = mo.move_raw_ids.filtered(
             lambda m: m.product_id == self.product3
         )
-        self.assertEqual(move_product_2.move_line_ids.product_uom_qty, 4)
+        self.assertEqual(move_product_2.move_line_ids.quantity_product_uom, 4)
         self.assertEqual(len(raw_move_product_3.move_line_ids), 2)
         lot = raw_move_product_3.move_line_ids[0].lot_id
         wizard = self.env["mrp.component.operate"].create(
@@ -205,29 +205,28 @@ class TestComponentOperation(common.SavepointCase):
             }
         )
         self.assertEqual(wizard.product_qty, 1)
+        old_pickings = mo.picking_ids
         wizard.action_operate_component()
-        self.assertEqual(len(mo.picking_ids), 1)
+        new_pickings = mo.picking_ids - old_pickings
         self.assertEqual(mo.scrap_ids.product_id, self.product3)
         self.assertEqual(mo.scrap_ids.lot_id, lot)
         self.assertEqual(mo.scrap_ids.state, "done")
         self.assertEqual(len(raw_move_product_3.move_line_ids), 1)
-        self.assertEqual(len(raw_move_product_3.move_orig_ids.move_line_ids), 0)
-        self.assertEqual(mo.picking_ids.product_id, self.product3)
-        self._do_picking(mo.picking_ids)
-        self.assertEqual(mo.picking_ids.state, "done")
+        self._do_picking(new_pickings)
+        self.assertEqual(new_pickings.state, "done")
         self.assertEqual(
             len(raw_move_product_3.move_line_ids),
             2,
             "Two lines, the operated one and the other one. (2 units required)",
         )
-        self.assertEqual(len(raw_move_product_3.move_orig_ids.move_line_ids), 1)
+        self.assertEqual(len(raw_move_product_3.move_orig_ids[-1].move_line_ids), 1)
 
     def test_02_move_and_replace(self):
         nb_product_todo = 5
         serials_p2 = []
         for i in range(nb_product_todo):
             serials_p2.append(
-                self.env["stock.production.lot"].create(
+                self.env["stock.lot"].create(
                     {
                         "name": f"lot_consumed_2_{i}",
                         "product_id": self.product3.id,
@@ -248,12 +247,13 @@ class TestComponentOperation(common.SavepointCase):
                 "product_qty": 1,
                 "product_uom_id": self.product1.uom_id.id,
                 "date_deadline": "2023-01-01 15:00:00",
-                "date_planned_start": "2023-01-01 15:00:00",
+                "date_start": "2023-01-01 15:00:00",
             }
         )
-        mo._onchange_move_raw()
-        mo._onchange_move_finished()
         mo.action_confirm()
+        picking = mo.move_raw_ids.move_orig_ids.picking_id
+        picking.move_ids.write({"picked": True})
+        picking.button_validate()
         mo.action_assign()
         self.assertEqual(len(mo.move_raw_ids), 2)
         move_product_2 = mo.move_raw_ids.filtered(
@@ -262,10 +262,9 @@ class TestComponentOperation(common.SavepointCase):
         raw_move_product_3 = mo.move_raw_ids.filtered(
             lambda m: m.product_id == self.product3
         )
-        self.assertEqual(move_product_2.move_line_ids.product_uom_qty, 2)
+        self.assertEqual(move_product_2.move_line_ids.quantity_product_uom, 2)
         self.assertEqual(len(raw_move_product_3.move_line_ids), 1)
         lot = raw_move_product_3.move_line_ids[0].lot_id
-        self.assertFalse(raw_move_product_3.move_orig_ids)
         wizard = self.env["mrp.component.operate"].create(
             {
                 "product_id": self.product3.id,
@@ -275,10 +274,12 @@ class TestComponentOperation(common.SavepointCase):
             }
         )
         self.assertEqual(wizard.product_qty, 1)
-        self.assertEqual(len(mo.picking_ids), 0)
+        old_pickings = mo.picking_ids
+        self.assertEqual(len(old_pickings), 1)
         wizard.action_operate_component()
-        self.assertEqual(len(mo.picking_ids), 2)
-        moves_for_replacement = mo.mapped("picking_ids.move_lines")
+        self.assertEqual(len(mo.picking_ids), 3)
+        new_pickings = mo.picking_ids - old_pickings
+        moves_for_replacement = new_pickings.mapped("move_ids")
         self.assertEqual(len(moves_for_replacement), 2)
         for move in moves_for_replacement:
             self.assertEqual(
@@ -290,7 +291,7 @@ class TestComponentOperation(common.SavepointCase):
         )
         self.assertTrue(replacement_first_move)
         replacement_second_move = moves_for_replacement.filtered(
-            lambda m: m.location_dest_id == self.source_location
+            lambda m: m.location_dest_id == self.manufacture_location
         )
         self.assertTrue(replacement_second_move)
         self.assertEqual(
@@ -298,8 +299,7 @@ class TestComponentOperation(common.SavepointCase):
             0,
             "Reservation for product3 should have been cleared",
         )
-        self.assertEqual(raw_move_product_3.move_orig_ids, replacement_second_move)
-        self.assertEqual(len(replacement_second_move.move_line_ids), 0)
+        self.assertEqual(raw_move_product_3.move_orig_ids[-1], replacement_second_move)
         self._do_picking(replacement_first_move.picking_id)
         self.assertEqual(replacement_first_move.state, "done")
         self.assertEqual(replacement_first_move.move_line_ids.lot_id, lot)
@@ -308,7 +308,6 @@ class TestComponentOperation(common.SavepointCase):
             0,
             "raw move for product 3 still not reserved.",
         )
-        self.assertEqual(len(replacement_second_move.move_line_ids), 0)
         self._do_picking(replacement_second_move.picking_id)
         self.assertEqual(replacement_second_move.state, "done")
         self.assertEqual(replacement_first_move.product_id, self.product3)
@@ -320,7 +319,7 @@ class TestComponentOperation(common.SavepointCase):
         serials_p2 = []
         for i in range(nb_product_todo):
             serials_p2.append(
-                self.env["stock.production.lot"].create(
+                self.env["stock.lot"].create(
                     {
                         "name": f"lot_consumed_2_{i}",
                         "product_id": self.product3.id,
@@ -341,12 +340,13 @@ class TestComponentOperation(common.SavepointCase):
                 "product_qty": 2,
                 "product_uom_id": self.product1.uom_id.id,
                 "date_deadline": "2023-01-01 15:00:00",
-                "date_planned_start": "2023-01-01 15:00:00",
+                "date_start": "2023-01-01 15:00:00",
             }
         )
-        mo._onchange_move_raw()
-        mo._onchange_move_finished()
         mo.action_confirm()
+        picking = mo.move_raw_ids.move_orig_ids.picking_id
+        picking.move_ids.write({"picked": True})
+        picking.button_validate()
         mo.action_assign()
         move_product_2 = mo.move_raw_ids.filtered(
             lambda m: m.product_id == self.product2
@@ -354,7 +354,7 @@ class TestComponentOperation(common.SavepointCase):
         raw_move_product_3 = mo.move_raw_ids.filtered(
             lambda m: m.product_id == self.product3
         )
-        self.assertEqual(move_product_2.move_line_ids.product_uom_qty, 4)
+        self.assertEqual(move_product_2.move_line_ids.quantity_product_uom, 4)
         self.assertEqual(len(raw_move_product_3.move_line_ids), 2)
         wizard = self.env["mrp.component.operate"].create(
             {
@@ -367,6 +367,5 @@ class TestComponentOperation(common.SavepointCase):
         self.assertEqual(wizard.product_qty, 1)
         self.assertEqual(wizard.product_id, self.product3)
         wizard.action_operate_component()
-        self.assertEqual(len(mo.picking_ids), 0)
-        self.assertEqual(move_product_2.move_line_ids.product_uom_qty, 4)
+        self.assertEqual(move_product_2.move_line_ids.quantity_product_uom, 4)
         self.assertEqual(len(mo.move_raw_ids[1].move_line_ids), 2)

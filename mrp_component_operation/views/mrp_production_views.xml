@@ -10,7 +10,7 @@
                     name="button_operate_components"
                     type="object"
                     string="Operate Components"
-                    attrs="{'invisible': [('state', 'in', ('cancel', 'draft', 'done'))]}"
+                    invisible="state in ('cancel', 'draft', 'done')"
                 />
                 </button>
             </field>

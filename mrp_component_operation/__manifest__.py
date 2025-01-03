@@ -3,12 +3,12 @@
 
 {
     "name": "MRP Components Operations",
-    "version": "14.0.1.2.0",
+    "version": "17.0.1.0.0",
     "author": "ForgeFlow, Odoo Community Association (OCA)",
     "summary": "Allows to operate the components from a MO",
     "website": "https://github.com/OCA/manufacture",
     "category": "Manufacturing",
-    "depends": ["mrp", "stock_move_forced_lot"],
+    "depends": ["mrp", "stock_restrict_lot"],
     "data": [
         "security/ir.model.access.csv",
         "views/mrp_component_operation_views.xml",

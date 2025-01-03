@@ -19,7 +19,7 @@ class MrpComponentOperate(models.Model):
         "Quantity", default=1.0, required=True, digits="Product Unit of Measure"
     )
 
-    lot_id = fields.Many2one("stock.production.lot")
+    lot_id = fields.Many2one("stock.lot")
 
     mo_id = fields.Many2one("mrp.production", ondelete="cascade", required=True)
 
@@ -57,41 +57,53 @@ class MrpComponentOperate(models.Model):
         res = []
         if self.incoming_operation == "replace":
             res = self._run_procurement(
-                self.operation_id.source_route_id, self.operation_id.source_location_id
+                self.operation_id.source_route_id,
+                self.operation_id.manufacture_location_id,
             )
             move = self.mo_id.move_raw_ids.filtered(
                 lambda x: x.product_id == self.product_id
             )
             filtered_pickings = self.mo_id.picking_ids.filtered(
-                lambda x: x.location_dest_id == self.operation_id.source_location_id
+                lambda x: x.location_dest_id
+                == self.operation_id.manufacture_location_id
             )
+            if not filtered_pickings:
+                raise UserError(
+                    _("There is no defined route for the manufacture location.")
+                )
             move.move_orig_ids |= filtered_pickings[-1].move_ids_without_package
         elif self.incoming_operation == "no":
             res = []
         return res
 
+    def _unreserve_quantity(self):
+        move = self.mo_id.move_raw_ids.move_line_ids.filtered(
+            lambda x: x.product_id == self.product_id
+            and (x.lot_id == self.lot_id or self.lot_id is False)
+        )
+        if move.quantity_product_uom == self.product_qty:
+            move.unlink()
+        else:
+            difference = move.quantity_product_uom - self.product_qty
+            move.write(
+                {
+                    "quantity": difference,
+                    "quantity_product_uom": difference,
+                }
+            )
+            move.move_id._recompute_state()
+
     def _run_outgoing_operations(self):
         res = []
         if self.outgoing_operation == "scrap":
             res = self._create_scrap()
+            self._unreserve_quantity()
         elif self.outgoing_operation == "move":
             res = self._run_procurement(
                 self.operation_id.destination_route_id,
                 self.operation_id.destination_location_id,
             )
-            move = self.mo_id.move_raw_ids.move_line_ids.filtered(
-                lambda x: x.product_id == self.product_id
-                and (x.lot_id == self.lot_id or self.lot_id is False)
-            )
-            if move.product_uom_qty == self.product_qty:
-                move.unlink()
-            else:
-                move.write(
-                    {
-                        "product_uom_qty": (move.product_uom_qty - self.product_qty),
-                    }
-                )
-                move.move_id._recompute_state()
+            self._unreserve_quantity()
         elif self.outgoing_operation == "no":
             res = []
         return res
@@ -103,7 +115,7 @@ class MrpComponentOperate(models.Model):
             "lot_id": self.lot_id.id,
             "scrap_qty": self.product_qty,
             "product_uom_id": self.product_id.product_tmpl_id.uom_id.id,
-            "location_id": self.operation_id.source_location_id.id,
+            "location_id": self.operation_id.manufacture_location_id.id,
             "scrap_location_id": self.operation_id.scrap_location_id.id,
             "company_id": self.env.company.id,
             "production_id": self.mo_id.id,
@@ -146,7 +158,7 @@ class MrpComponentOperate(models.Model):
             "mrp_production_ids": self.mo_id.id,
         }
         if self.lot_id and route != self.operation_id.source_route_id:
-            procurement_data["lot_id"] = self.lot_id.id
+            procurement_data["restrict_lot_id"] = self.lot_id.id
         return procurement_data
 
     @api.model

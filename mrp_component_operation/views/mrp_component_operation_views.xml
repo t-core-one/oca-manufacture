@@ -10,11 +10,13 @@
                         name="web_ribbon"
                         title="Archived"
                         bg_color="bg-danger"
-                        attrs="{'invisible': [('active', '=', True)]}"
+                        invisible="active"
                     />
-                    <h1>
-                        <field name="name" string="Reference" />
-                    </h1>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" string="Reference" />
+                        </h1>
+                    </div>
                     <group name="picking_type" string="Operation Type">
                         <field name="picking_type_id" />
                         <field name="active" invisible="1" />
@@ -26,27 +28,32 @@
                     <group
                         name="locations"
                         string="Locations/Routes"
-                        attrs="{'invisible': [('outgoing_operation', '=', 'no'),('incoming_operation', '=', 'no')]}"
+                        invisible="outgoing_operation == 'no' and incoming_operation == 'no'"
                     >
                         <field
-                            name="source_location_id"
-                            attrs="{'invisible': [('incoming_operation', '!=', 'replace'),('outgoing_operation', '!=', 'scrap')], 'required': ['|',('incoming_operation', '=', 'replace'),('outgoing_operation', '=', 'scrap')]}"
+                            name="manufacture_location_id"
+                            invisible="incoming_operation != 'replace' and outgoing_operation != 'scrap'"
+                            required="incoming_operation == 'replace' or outgoing_operation == 'scrap'"
                         />
                         <field
                             name="source_route_id"
-                            attrs="{'invisible': [('incoming_operation', '!=', 'replace')], 'required': [('incoming_operation', '=', 'replace')]}"
+                            invisible="incoming_operation != 'replace'"
+                            required="incoming_operation == 'replace'"
                         />
                         <field
                             name="destination_location_id"
-                            attrs="{'invisible': [('outgoing_operation', '!=', 'move')], 'required': [('outgoing_operation', '=', 'move')]}"
+                            invisible="outgoing_operation != 'move'"
+                            required="outgoing_operation == 'move'"
                         />
                         <field
                             name="destination_route_id"
-                            attrs="{'invisible': [('outgoing_operation', '!=', 'move')], 'required': [('outgoing_operation', '=', 'move')]}"
+                            invisible="outgoing_operation != 'move'"
+                            required="outgoing_operation == 'move'"
                         />
                         <field
                             name="scrap_location_id"
-                            attrs="{'invisible': [('outgoing_operation', '!=', 'scrap')], 'required': [('outgoing_operation', '=', 'scrap')]}"
+                            invisible="outgoing_operation != 'scrap'"
+                            required="outgoing_operation == 'scrap'"
                         />
                     </group>
 
