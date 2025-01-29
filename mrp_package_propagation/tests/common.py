@@ -8,7 +8,6 @@ from odoo.tests import common
 
 
 class Common(common.SavepointCase):
-
     PACKAGE_NAME = "PROPAGATED-PKG"
 
     @classmethod

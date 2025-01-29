@@ -17,28 +17,30 @@ MRP Package Propagation
     :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
 .. |badge3| image:: https://img.shields.io/badge/github-OCA%2Fmanufacture-lightgray.png?logo=github
-    :target: https://github.com/OCA/manufacture/tree/14.0/mrp_package_propagation
+    :target: https://github.com/OCA/manufacture/tree/18.0/mrp_package_propagation
     :alt: OCA/manufacture
 .. |badge4| image:: https://img.shields.io/badge/weblate-Translate%20me-F47D42.png
-    :target: https://translation.odoo-community.org/projects/manufacture-14-0/manufacture-14-0-mrp_package_propagation
+    :target: https://translation.odoo-community.org/projects/manufacture-18-0/manufacture-18-0-mrp_package_propagation
     :alt: Translate me on Weblate
 .. |badge5| image:: https://img.shields.io/badge/runboat-Try%20me-875A7B.png
-    :target: https://runboat.odoo-community.org/builds?repo=OCA/manufacture&target_branch=14.0
+    :target: https://runboat.odoo-community.org/builds?repo=OCA/manufacture&target_branch=18.0
     :alt: Try me on Runboat
 
 |badge1| |badge2| |badge3| |badge4| |badge5|
 
 Allow to propagate a package from a component to a finished product.
 
-This is useful for instance if you want to keep the box of one of the component
-(which could have already a label stuck on it) for your finished product.
+This is useful for instance if you want to keep the box of one of the
+component (which could have already a label stuck on it) for your
+finished product.
 
 Two constraints:
 
-* the component quantity has to be 1 unit
-* the manufacturing order has to produce exactly the BoM quantity
+-  the component quantity has to be 1 unit
+-  the manufacturing order has to produce exactly the BoM quantity
 
-This is to ensure we get only one package reserved for the given component.
+This is to ensure we get only one package reserved for the given
+component.
 
 .. IMPORTANT::
    This is an alpha version, the data model and design can change at any time without warning.
@@ -55,8 +57,8 @@ Usage
 
 On the BoM:
 
-* enable the option "Package Propagation"
-* flag one of the BoM line with "Propagate Package"
+-  enable the option "Package Propagation"
+-  flag one of the BoM line with "Propagate Package"
 
 Bug Tracker
 ===========
@@ -64,7 +66,7 @@ Bug Tracker
 Bugs are tracked on `GitHub Issues <https://github.com/OCA/manufacture/issues>`_.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
-`feedback <https://github.com/OCA/manufacture/issues/new?body=module:%20mrp_package_propagation%0Aversion:%2014.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
+`feedback <https://github.com/OCA/manufacture/issues/new?body=module:%20mrp_package_propagation%0Aversion:%2018.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
 
 Do not contact contributors directly about support or help with technical issues.
 
@@ -72,17 +74,17 @@ Credits
 =======
 
 Authors
-~~~~~~~
+-------
 
 * Camptocamp
 
 Contributors
-~~~~~~~~~~~~
+------------
 
-* Sébastien Alix <sebastien.alix@camptocamp.com>
+-  Sébastien Alix <sebastien.alix@camptocamp.com>
 
 Maintainers
-~~~~~~~~~~~
+-----------
 
 This module is maintained by the OCA.
 
@@ -102,6 +104,6 @@ Current `maintainer <https://odoo-community.org/page/maintainer-role>`__:
 
 |maintainer-sebalix| 
 
-This module is part of the `OCA/manufacture <https://github.com/OCA/manufacture/tree/14.0/mrp_package_propagation>`_ project on GitHub.
+This module is part of the `OCA/manufacture <https://github.com/OCA/manufacture/tree/18.0/mrp_package_propagation>`_ project on GitHub.
 
 You are welcome to contribute. To learn how please visit https://odoo-community.org/page/Contribute.
