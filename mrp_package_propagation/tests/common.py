@@ -4,10 +4,10 @@
 import random
 import string
 
-from odoo.tests import common
+from odoo.tests import TransactionCase
 
 
-class Common(common.SavepointCase):
+class Common(TransactionCase):
     PACKAGE_NAME = "PROPAGATED-PKG"
 
     @classmethod
@@ -15,6 +15,8 @@ class Common(common.SavepointCase):
         super().setUpClass()
         cls.env = cls.env(context=dict(cls.env.context, tracking_disable=True))
         cls.bom = cls.env.ref("mrp.mrp_bom_desk")
+        # Add UOM group to user so it's display on Form
+        cls.env.user.groups_id += cls.env.ref("uom.group_uom")
 
     @classmethod
     def _update_qty_in_location(
@@ -35,6 +37,21 @@ class Common(common.SavepointCase):
         )
 
     @classmethod
+    def _empty_quants(cls, product, location):
+        grouped_quants = cls.env["stock.quant"]._read_group(
+            [("product_id", "=", product.id), ("location_id", "child_of", location.id)],
+            ["lot_id", "package_id"],
+        )
+        for quant_group in grouped_quants:
+            cls._update_qty_in_location(
+                location,
+                product,
+                0,
+                package=quant_group[1],
+                lot=quant_group[0],
+            )
+
+    @classmethod
     def _update_stock_component_qty(cls, order=None, bom=None, location=None):
         if not order and not bom:
             return
@@ -43,8 +60,9 @@ class Common(common.SavepointCase):
         if not location:
             location = cls.env.ref("stock.stock_location_stock")
         for line in bom.bom_line_ids:
-            if line.product_id.type != "product":
+            if not line.product_id.is_storable:
                 continue
+            cls._empty_quants(line.product_id, location)
             lot = package = None
             if line.product_id.tracking != "none":
                 lot_name = "".join(
@@ -55,7 +73,7 @@ class Common(common.SavepointCase):
                     "company_id": line.company_id.id,
                     "name": lot_name,
                 }
-                lot = cls.env["stock.production.lot"].create(vals)
+                lot = cls.env["stock.lot"].create(vals)
             if line.propagate_package:
                 vals = {"name": cls.PACKAGE_NAME}
                 package = cls.env["stock.quant.package"].create(vals)

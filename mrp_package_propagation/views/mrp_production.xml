@@ -12,13 +12,13 @@
                 <field
                     name="is_package_propagated"
                     force_save="1"
-                    attrs="{'invisible': [('is_package_propagated', '=', False)]}"
+                    invisible="not is_package_propagated"
                 />
             </xpath>
             <label for="lot_producing_id" position="before">
                 <field
                     name="propagated_package_id"
-                    attrs="{'invisible': [('is_package_propagated', '=', False)]}"
+                    invisible="not is_package_propagated"
                 />
             </label>
         </field>

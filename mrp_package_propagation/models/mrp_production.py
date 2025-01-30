@@ -1,7 +1,7 @@
 # Copyright 2023 Camptocamp SA
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
-from odoo import _, api, fields, models, tools
+from odoo import api, fields, models, tools
 from odoo.exceptions import UserError
 
 
@@ -27,17 +27,17 @@ class MrpProduction(models.Model):
 
     @api.depends(
         "move_raw_ids.propagate_package",
-        "move_raw_ids.move_line_ids.qty_done",
+        "move_raw_ids.move_line_ids.package_id",
         "move_raw_ids.move_orig_ids.move_line_ids.result_package_id",
     )
     def _compute_propagated_package_id(self):
         for order in self:
             order.propagated_package_id = False
             move_with_package = order.move_raw_ids.filtered(
-                lambda o: o.propagate_package
+                lambda mov: mov.propagate_package
             )
             line_with_package = move_with_package.move_line_ids.filtered(
-                lambda l: l.package_id
+                lambda line: line.package_id
             )
             if len(line_with_package) == 1:
                 order.propagated_package_id = line_with_package.package_id
@@ -78,12 +78,13 @@ class MrpProduction(models.Model):
             )
             if not qty_ok or order.product_uom_id != bom.product_uom_id:
                 raise UserError(
-                    _(
+                    self.env._(
                         "The BoM is propagating a package from one component.\n"
                         "As such, the manufacturing order is forced to produce "
-                        "the same quantity than the BoM: %s %s"
+                        "the same quantity than the BoM: %s %s",
+                        bom.product_qty,
+                        bom.product_uom_id.display_name,
                     )
-                    % (bom.product_qty, bom.product_uom_id.display_name)
                 )
 
     def _set_package_propagation_data_from_bom(self):
@@ -107,8 +108,8 @@ class MrpProduction(models.Model):
             if not order.is_package_propagated:
                 continue
             finish_moves = order.move_finished_ids.filtered(
-                lambda m: m.product_id == order.product_id
-                and m.state not in ("done", "cancel")
+                lambda mov: mov.product_id == order.product_id  # noqa: B023
+                and mov.state not in ("done", "cancel")
             )
             if finish_moves.move_line_ids:
                 finish_moves.move_line_ids.result_package_id = (

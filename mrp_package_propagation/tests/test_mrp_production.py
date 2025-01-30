@@ -3,7 +3,7 @@
 
 from odoo import fields
 from odoo.exceptions import UserError
-from odoo.tests.common import Form
+from odoo.tests import Form
 
 from .common import Common
 
@@ -26,11 +26,6 @@ class TestMrpProduction(Common):
         with Form(cls.env["mrp.production"]) as form:
             form.bom_id = bom
             return form.save()
-
-    def _set_qty_done(self, order):
-        for line in order.move_raw_ids.move_line_ids:
-            line.qty_done = line.product_uom_qty
-        order.qty_producing = order.product_qty
 
     def test_order_check_package_propagation(self):
         self.assertTrue(self.order.is_package_propagated)
@@ -55,14 +50,12 @@ class TestMrpProduction(Common):
         self.order.action_assign()
         self.assertTrue(self.order.is_package_propagated)  # set by action_confirm
         self.assertTrue(any(self.order.move_raw_ids.mapped("propagate_package")))
-        self._set_qty_done(self.order)
         self.assertEqual(self.order.propagated_package_id.name, self.PACKAGE_NAME)
 
     def test_order_post_inventory(self):
         self._update_stock_component_qty(self.order)
         self.order.action_confirm()
         self.order.action_assign()
-        self._set_qty_done(self.order)
         self.order.action_generate_serial()
         self.order.button_mark_done()
         self.assertEqual(self.order.propagated_package_id.name, self.PACKAGE_NAME)
@@ -92,21 +85,18 @@ class TestMrpProduction(Common):
         order.picking_ids.action_assign()
         # Put a destination package in Pre-PICK for the consumable component
         consu_move_line = order.picking_ids.move_line_ids.filtered(
-            lambda l: l.product_id == consu_bom_line.product_id
+            lambda line: line.product_id == consu_bom_line.product_id
         )
         package = self.env["stock.quant.package"].create(
             {"name": self.PACKAGE_NAME + "-CONSU"}
         )
         consu_move_line.result_package_id = package
         # Validate the Pre-PICK: package is found by the MO
-        for line in order.picking_ids.move_line_ids:
-            line.qty_done = line.product_uom_qty
-        order.picking_ids._action_done()
+        order.picking_ids.button_validate()
         self.assertTrue(order.is_package_propagated)
         self.assertTrue(any(order.move_raw_ids.mapped("propagate_package")))
         self.assertEqual(order.propagated_package_id, package)
         # Validate MO: package is propagated to finished product
-        self._set_qty_done(order)
         order.action_generate_serial()
         order.button_mark_done()
         self.assertEqual(

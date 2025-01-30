@@ -1,16 +1,14 @@
 # Copyright 2023 Camptocamp SA
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
-from odoo import _, api, fields, models, tools
+from odoo import api, fields, models, tools
 from odoo.exceptions import ValidationError
 
 
 class MrpBomLine(models.Model):
     _inherit = "mrp.bom.line"
 
-    propagate_package = fields.Boolean(
-        default=False,
-    )
+    propagate_package = fields.Boolean()
     display_propagate_package = fields.Boolean(
         compute="_compute_display_propagate_package"
     )
@@ -44,7 +42,7 @@ class MrpBomLine(models.Model):
             )
             if len(lines_to_propagate) > 1:
                 raise ValidationError(
-                    _(
+                    self.env._(
                         "Only one component can propagate its package "
                         "to the finished product."
                     )
@@ -59,6 +57,8 @@ class MrpBomLine(models.Model):
                 line.product_uom_id != uom_unit or not qty_ok
             ):
                 raise ValidationError(
-                    _("The component propagating the package must consume 1 %s.")
+                    self.env._(
+                        "The component propagating the package must consume 1 %s."
+                    )
                     % uom_unit.display_name
                 )

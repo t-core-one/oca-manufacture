@@ -8,17 +8,15 @@
         <field name="inherit_id" ref="mrp.mrp_bom_form_view" />
         <field name="arch" type="xml">
             <field name="company_id" position="after">
-                <field name="display_package_propagation" invisible="1" />
                 <field
                     name="package_propagation"
-                    attrs="{'invisible': [('display_package_propagation', '=', False)]}"
+                    invisible="not display_package_propagation"
                 />
             </field>
-            <xpath expr="//field[@name='bom_line_ids']/tree" position="inside">
-                <field name="display_propagate_package" invisible="1" />
+            <xpath expr="//field[@name='bom_line_ids']/list" position="inside">
                 <field
                     name="propagate_package"
-                    attrs="{'column_invisible': ['|', ('parent.display_package_propagation', '=', False), ('parent.package_propagation', '=', False)]}"
+                    column_invisible="not parent.display_package_propagation or not parent.package_propagation"
                 />
             </xpath>
         </field>
