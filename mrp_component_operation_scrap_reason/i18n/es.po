@@ -27,21 +27,15 @@ msgid "Component Operate"
 msgstr "Operación de Componentes"
 
 #. module: mrp_component_operation_scrap_reason
-#: model:ir.model.fields,field_description:mrp_component_operation_scrap_reason.field_mrp_component_operate__display_name
-msgid "Display Name"
-msgstr "Mostrar Nombre"
-
-#. module: mrp_component_operation_scrap_reason
-#: model:ir.model.fields,field_description:mrp_component_operation_scrap_reason.field_mrp_component_operate__id
-msgid "ID"
-msgstr "ID"
-
-#. module: mrp_component_operation_scrap_reason
-#: model:ir.model.fields,field_description:mrp_component_operation_scrap_reason.field_mrp_component_operate____last_update
-msgid "Last Modified on"
-msgstr "Última Modificación el"
-
-#. module: mrp_component_operation_scrap_reason
 #: model:ir.model.fields,field_description:mrp_component_operation_scrap_reason.field_mrp_component_operate__scrap_reason_code_id
 msgid "Scrap Reason Code"
 msgstr "Código de Motivo del Rechazo"
+
+#~ msgid "Display Name"
+#~ msgstr "Mostrar Nombre"
+
+#~ msgid "ID"
+#~ msgstr "ID"
+
+#~ msgid "Last Modified on"
+#~ msgstr "Última Modificación el"
