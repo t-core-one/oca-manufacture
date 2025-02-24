@@ -81,8 +81,6 @@ msgstr "Ruta Destino"
 #. module: mrp_component_operation
 #: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_component_operate__display_name
 #: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_component_operation__display_name
-#: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_production__display_name
-#: model:ir.model.fields,field_description:mrp_component_operation.field_stock_location_route__display_name
 msgid "Display Name"
 msgstr "Mostrar Nombre"
 
@@ -107,8 +105,6 @@ msgstr ""
 #. module: mrp_component_operation
 #: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_component_operate__id
 #: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_component_operation__id
-#: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_production__id
-#: model:ir.model.fields,field_description:mrp_component_operation.field_stock_location_route__id
 msgid "ID"
 msgstr "ID"
 
@@ -119,17 +115,9 @@ msgid "Incoming Operation"
 msgstr "Operación Entrante"
 
 #. module: mrp_component_operation
-#: model:ir.model,name:mrp_component_operation.model_stock_location_route
+#: model:ir.model,name:mrp_component_operation.model_stock_route
 msgid "Inventory Routes"
 msgstr "Rutas de Inventario"
-
-#. module: mrp_component_operation
-#: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_component_operate____last_update
-#: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_component_operation____last_update
-#: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_production____last_update
-#: model:ir.model.fields,field_description:mrp_component_operation.field_stock_location_route____last_update
-msgid "Last Modified on"
-msgstr "Última Modificación el"
 
 #. module: mrp_component_operation
 #: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_component_operate__write_uid
@@ -164,6 +152,11 @@ msgid "Make a Scrap"
 msgstr "Hacer un desguace"
 
 #. module: mrp_component_operation
+#: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_component_operation__manufacture_location_id
+msgid "Manufacture Location"
+msgstr ""
+
+#. module: mrp_component_operation
 #: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_component_operate__mo_id
 msgid "Mo"
 msgstr "Mo"
@@ -185,12 +178,14 @@ msgid "No"
 msgstr "No"
 
 #. module: mrp_component_operation
+#. odoo-python
 #: code:addons/mrp_component_operation/wizards/mrp_component_operate.py:0
 #, python-format
 msgid "No route specified"
 msgstr "Sin ruta especificada"
 
 #. module: mrp_component_operation
+#. odoo-python
 #: code:addons/mrp_component_operation/models/mrp_production.py:0
 #, python-format
 msgid "Operate Component"
@@ -263,7 +258,7 @@ msgid "Scrap Location"
 msgstr "Ubicación Desecho"
 
 #. module: mrp_component_operation
-#: model:ir.model.fields,field_description:mrp_component_operation.field_stock_location_route__mo_component_selectable
+#: model:ir.model.fields,field_description:mrp_component_operation.field_stock_route__mo_component_selectable
 msgid "Selectable on MO Components"
 msgstr "Seleccionable en Componentes MO"
 
@@ -271,11 +266,6 @@ msgstr "Seleccionable en Componentes MO"
 #: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_component_operation__sequence
 msgid "Sequence"
 msgstr "Secuencia"
-
-#. module: mrp_component_operation
-#: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_component_operation__source_location_id
-msgid "Source Location"
-msgstr "Localización de Origen"
 
 #. module: mrp_component_operation
 #: model:ir.model.fields,field_description:mrp_component_operation.field_mrp_component_operation__source_route_id
@@ -288,7 +278,7 @@ msgid "The Location where the components are going to be transferred."
 msgstr "La Ubicación donde se transferirán los componentes."
 
 #. module: mrp_component_operation
-#: model:ir.model.fields,help:mrp_component_operation.field_mrp_component_operation__source_location_id
+#: model:ir.model.fields,help:mrp_component_operation.field_mrp_component_operation__manufacture_location_id
 msgid "The Location where the components are."
 msgstr "La ubicación donde están los componentes."
 
@@ -302,3 +292,16 @@ msgstr "Ruta utilizada para elegir los componentes."
 msgid "The Route used to transfer the components to the destination location."
 msgstr ""
 "Ruta utilizada para transferir los componentes a la ubicación de destino."
+
+#. module: mrp_component_operation
+#. odoo-python
+#: code:addons/mrp_component_operation/wizards/mrp_component_operate.py:0
+#, python-format
+msgid "There is no defined route for the manufacture location."
+msgstr ""
+
+#~ msgid "Last Modified on"
+#~ msgstr "Última Modificación el"
+
+#~ msgid "Source Location"
+#~ msgstr "Localización de Origen"
